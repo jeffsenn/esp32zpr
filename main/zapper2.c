@@ -71,6 +71,7 @@
 
 
 #define GPIO_ZAP 15
+#define GPIO_VIBE 2
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -133,6 +134,14 @@ void zap(int i) {
     WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<GPIO_ZAP));
   } else {
     WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<GPIO_ZAP));
+  }
+}
+
+void vibe(int i) {
+  if(i) {
+    WRITE_PERI_REG(GPIO_OUT_W1TS_REG, (1<<GPIO_VIBE));
+  } else {
+    WRITE_PERI_REG(GPIO_OUT_W1TC_REG, (1<<GPIO_VIBE));
   }
 }
 
@@ -295,12 +304,14 @@ void beep_on(int freq) {
   ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel, 4000);
   ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);
   zap(1);
+  vibe(1);
 }
 void beep_off() {
   ledc_set_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel,0);
   ledc_update_duty(ledc_channel[0].speed_mode, ledc_channel[0].channel);  
   //ledc_stop(ledc_channel[0].speed_mode, ledc_channel[0].channel,0);
     zap(0);
+  vibe(0);    
 }
 
 
@@ -466,6 +477,7 @@ void app_main()
     gpio_config_t io_conf;
 
     zap(0);
+    vibe(0);
     lockdown = 0;
     
     ESP_ERROR_CHECK( nvs_flash_init() ); //need this for WIFI to work.
@@ -481,7 +493,7 @@ void app_main()
 
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = (1ULL<< GPIO_ZAP) | 0; //pin 25
+    io_conf.pin_bit_mask = (1ULL<< GPIO_ZAP) | (1ULL<< GPIO_VIBE) ; //pin 25
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
